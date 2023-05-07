@@ -14,6 +14,7 @@ if ($conn->connect_error) {
 
 // Xử lý thêm mặt hàng vào giỏ hàng
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $orderID = $_POST['order_id'];
     if (isset($_POST['quantity']) && is_array($_POST['quantity'])) {
         foreach ($_POST['quantity'] as $itemID => $quantity) {
             // Lấy thông tin mặt hàng từ bảng "All_Category"
@@ -31,11 +32,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 // Thêm mặt hàng vào bảng "cart"
                 if ($quantity > 0) {
-                    $insertQuery = "INSERT INTO cart (item_id, item_name, price, quantity, total) VALUES (?, ?, ?, ?, ?)";
+                    $insertQuery = "INSERT INTO cart (order_id, item_id, item_name, price, quantity, total) VALUES (?, ?, ?, ?, ?, ?)";
                     $insertStmt = $conn->prepare($insertQuery);
-                    $insertStmt->bind_param("issid", $itemID, $itemName, $itemPrice, $quantity, $totalPrice);
+                    $insertStmt->bind_param("ssssid", $orderID, $itemID, $itemName, $itemPrice, $quantity, $totalPrice);
                     $insertStmt->execute();
-                } 
+                }
             }
         }
     }

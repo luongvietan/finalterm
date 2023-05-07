@@ -3,7 +3,7 @@ session_start();
 
 // Kiểm tra xem người dùng đã đăng nhập và có quyền quản trị hay không
 if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'admin') {
-  header("Location: login.php");
+  header("Location: admin.php");
   exit();
 }
 

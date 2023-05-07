@@ -12,6 +12,28 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
+session_start();
+
+// Kiểm tra nếu giỏ hàng đã được thanh toán
+if (isset($_SESSION['order_id']) && isset($_SESSION['is_paid']) && $_SESSION['is_paid']) {
+    // Tạo order_id mới
+    $orderID = "Order" . rand(100, 999);
+    
+    // Cập nhật session với order_id mới
+    $_SESSION['order_id'] = $orderID;
+    $_SESSION['is_paid'] = false;
+} elseif (!isset($_SESSION['order_id'])) {
+    // Tạo order_id mới khi session chưa tồn tại
+    $orderID = "Order" . rand(100, 999);
+    
+    // Lưu order_id vào session
+    $_SESSION['order_id'] = $orderID;
+    $_SESSION['is_paid'] = false;
+} else {
+    // Lấy order_id từ session
+    $orderID = $_SESSION['order_id'];
+}
+
 // Truy vấn dữ liệu từ bảng "All_Category"
 $sql = "SELECT * FROM All_Category";
 $result = $conn->query($sql);
@@ -19,6 +41,7 @@ $result = $conn->query($sql);
 if ($result->num_rows > 0) {
     echo "<h2>Items List</h2>";
     echo "<form action='add_to_cart.php' method='POST'>";
+    echo "<input type='hidden' name='order_id' value='" . $orderID . "'>"; // Add this line to include the order_id
     echo "<table>
             <tr>
                 <th>Item ID</th>
@@ -44,5 +67,6 @@ if ($result->num_rows > 0) {
 } else {
     echo "No items found.";
 }
+
 $conn->close();
 ?>
