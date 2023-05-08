@@ -19,13 +19,7 @@ if ($conn->connect_error) {
 }
 
 // Xóa dữ liệu trong bảng "cart"
-$sql = "DELETE FROM cart";
-
-if ($conn->query($sql) === TRUE) {
-    echo "Dữ liệu đã được xóa thành công trong bảng cart.";
-} else {
-    echo "Lỗi khi xóa dữ liệu trong bảng cart: " . $conn->error;
-}
+echo "Đơn Hàng Đã Được Thanh Toán !";
 
 // Đóng kết nối tới cơ sở dữ liệu
 $conn->close();

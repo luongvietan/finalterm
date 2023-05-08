@@ -51,6 +51,8 @@ if ($result->num_rows > 0) {
     echo "</table>";
 
     echo "<h3>Tổng giá trị phải thanh toán: " . $totalPrice . ".000 VND</h3>";
+
+    
 } else {
     echo "No items found in the cart.";
 }
@@ -65,7 +67,7 @@ $conn->close();
 
 <script>
     function payByCash() {
-        window.location.href = "payment_cash.php";
+        window.location.href = "orders_pending.php";
     }
 
     function payByBankTransfer() {
