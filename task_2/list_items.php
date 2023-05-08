@@ -64,9 +64,10 @@ if ($result->num_rows > 0) {
     echo "</table>";
     echo "<input type='submit' value='Add to Cart'>";
     echo "</form>";
-} else {
-    echo "No items found.";
-}
 
-$conn->close();
-?>
+    // Hiển thị tài khoản người dùng và nút đăng xuất
+    echo "<div style='position: absolute; top: 10px; right: 10px;'>";
+    echo "Tài khoản : " . $_SESSION['username'] . " ";
+    echo "<br><a href='logout.php'>Đăng xuất</a>";
+    echo "</div>";
+}
