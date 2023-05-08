@@ -46,6 +46,7 @@ if ($result->num_rows > 0) {
         echo "</tr>";
 
         $totalPrice += $row["total"]; // Cập nhật tổng giá trị
+        
     }
     echo "</table>";
 
@@ -72,6 +73,7 @@ $conn->close();
     }
 
     function payByMomo() {
+       
         window.location.href = "payment_momo.php";
     }
 </script>

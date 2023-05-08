@@ -1,84 +1,53 @@
 <?php
-// Kết nối cơ sở dữ liệu
-$db = new PDO('mysql:host=localhost;dbname=form2;charset=utf8', 'admin', 'admin');
 
-// Lấy thông tin đơn hàng từ tham số URL
-$order_id = $_GET['order_id'];
-$order = $db->prepare('SELECT * FROM orders WHERE order_id = ?');
-$order->execute([$order_id]);
-$order = $order->fetch(PDO::FETCH_ASSOC);
-
-// Nếu không tìm thấy đơn hàng, chuyển hướng về trang danh sách mặt hàng
-if (!$order) {
-  header('Location: list_items.php');
-  exit();
+// Hàm để tạo một chuỗi ngẫu nhiên
+function generateRandomString($length) {
+    $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $randomString = '';
+    for ($i = 0; $i < $length; $i++) {
+        $randomString .= $characters[rand(0, strlen($characters) - 1)];
+    }
+    return $randomString;
 }
 
-// Gửi yêu cầu thanh toán qua Momo API
-// Cần cài đặt thư viện PHP cURL trước khi sử dụng
-// Hướng dẫn cài đặt: https://curl.se/docs/install.html
-$data = [
-  'partnerCode' => 'MOMO',
-  'accessKey' => 'ACCESS_KEY',
-  'requestId' => uniqid('momo_'),
-  'amount' => $order['quantity'] * $order['item_price'],
-  'orderId' => $order_id,
-  'orderInfo' => $order['item_name'] . ' - ' . $order['email'],
-  'returnUrl' => 'https://example.com/payment_callback.php',
-  'notifyUrl' => 'https://example.com/payment_callback.php',
-  'extraData' => '',
-];
-ksort($data);
-$signature = hash_hmac('sha256', http_build_query($data), 'SECRET_KEY');
-$data['signature'] = $signature;
+if (isset($_POST['QRCode'])) {
+    $totalPrice = isset($_SESSION['totalPrice']) ? $_SESSION['totalPrice'] : 0;
+    $randomString = generateRandomString(6);
 
-$ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, 'https://test-payment.momo.vn/gw_payment/transactionProcessor');
-curl_setopt($ch, CURLOPT_POST, true);
-curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-$result = curl_exec($ch);
-curl_close($ch);
+    $curl = curl_init();
 
-$response = json_decode($result, true);
+    curl_setopt_array($curl, array(
+        CURLOPT_URL => "https://bio.ziller.vn/api/qr/add",
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_ENCODING => "",
+        CURLOPT_MAXREDIRS => 2,
+        CURLOPT_TIMEOUT => 10,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_CUSTOMREQUEST => "POST",
+        CURLOPT_HTTPHEADER => array(
+            "Authorization: Bearer 3f3c3700b254731a849c8dd020eab3c6",
+            "Content-Type: application/json",
+        ),
+        CURLOPT_POSTFIELDS => json_encode(array (
+            'type' => 'text',
+            'data' => '2|99|0384398634|LUONG VIET AN||0|0|'.$totalPrice.'|'.$randomString.'|transfer_myqr',
+            'background' => 'rgb(255,255,255)',
+            'foreground' => 'rgb(0,0,0)',
+            'logo' => 'https://site.com/logo.png',
+        )),
+    ));
 
-// Kiểm tra kết quả và chuyển hướng đến trang thanh toán của Momo
-if ($response['errorCode'] == 0 && $response['payUrl']) {
-  header('Location: ' . $response['payUrl']);
-} else {
-  $error = 'Payment pending. . .';
-}
+    $response = curl_exec($curl);
 
-// Hiển thị thông báo lỗi nếu có
-if (isset($error)) {
-echo '<p>' . $error . '</p>';
+    curl_close($curl);
+    $huy = json_decode($response);
 }
 ?>
-<p><a href="list_items.php">Back to item list</a></p>
-$curl = curl_init();
 
-curl_setopt_array($curl, array(
-    CURLOPT_URL => "https://bio.ziller.vn/api/qr/add",
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_ENCODING => "",
-    CURLOPT_MAXREDIRS => 2,
-    CURLOPT_TIMEOUT => 10,
-    CURLOPT_FOLLOWLOCATION => true,
-    CURLOPT_CUSTOMREQUEST => "POST",
-    CURLOPT_HTTPHEADER => array(
-        "Authorization: Bearer 3f3c3700b254731a849c8dd020eab3c6",
-        "Content-Type: application/json",
-    ),
-    CURLOPT_POSTFIELDS => json_encode(array (
-  'type' => 'link',
-  'data' => 'https://google.com',
-  'background' => 'rgb(255,255,255)',
-  'foreground' => 'rgb(0,0,0)',
-  'logo' => 'https://site.com/logo.png',
-)),
-));
-
-$response = curl_exec($curl);
-
-curl_close($curl);
-echo $response;
+<body>
+  <form action="#" method="post">
+    <input type="submit" name="QRCode" value="Tao QR">
+  </form>
+  <img src="<?= $huy->link; ?>" alt="">
+</body>
+</html>
