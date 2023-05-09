@@ -75,6 +75,7 @@ if ($result->num_rows > 0) {
   }
 
   // Thực hiện các thao tác cập nhật và thêm mới vào bảng "orders" dựa trên mảng
+  $randomString = generateRandomString(6);
   foreach ($orderItems as $itemID => $itemData) {
       $itemName = $itemData["item_name"];
       $itemPrice = $itemData["item_price"];
@@ -85,8 +86,8 @@ if ($result->num_rows > 0) {
           // Nếu trạng thái là "pending", tạo order_id mới và thêm mới vào bảng "orders"
           $newOrderID = generateOrderID();
           $paymentMethod = "cash";
-          $insertQuery = "INSERT INTO orders (order_id, item_id, item_name, item_price, payment_method, order_status, quantity)
-          VALUES ('$newOrderID', '$itemID', '$itemName', '$itemPrice', '$paymentMethod', '$orderStatus', $quantity)";
+          $insertQuery = "INSERT INTO orders (order_id, item_id, item_name, item_price, payment_method, order_status, quantity, code)
+          VALUES ('$newOrderID', '$itemID', '$itemName', '$itemPrice', '$paymentMethod', '$orderStatus', $quantity, '$randomString')";
           $conn->query($insertQuery);
 
           // Đánh dấu rằng dữ liệu đã được thêm vào cơ sở dữ liệu

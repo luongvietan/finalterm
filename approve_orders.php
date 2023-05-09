@@ -42,10 +42,11 @@ if ($result->num_rows > 0) {
                 <th>Payment Method</th>
                 <th>Order Status</th>
                 <th>Quantity</th>
+                <th>Code</th>
                 <th>Approve</th>
             </tr>";
     echo "<tr>";
-    echo "<td colspan='8'><input type='checkbox' onclick='selectAll()'> Chọn tất cả</td>";
+    echo "<td colspan='9'><input type='checkbox' onclick='selectAll()'> Chọn tất cả</td>";
     echo "</tr>";
     while ($row = $result->fetch_assoc()) {
         echo "<tr>";
@@ -56,6 +57,7 @@ if ($result->num_rows > 0) {
         echo "<td>" . $row["payment_method"] . "</td>";
         echo "<td>" . $row["order_status"] . "</td>";
         echo "<td>" . $row["quantity"] . "</td>";
+        echo "<td>" . $row["code"] . "</td>";
         echo "<td><input type='checkbox' name='order_ids[]' value='" . $row["order_id"] . "'></td>";
         echo "</tr>";
     }
