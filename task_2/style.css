@@ -1,0 +1,74 @@
+/* Style for header part  */
+header {
+  background-color: rgb(52, 58, 64);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+}
+
+/* Resize image logo */
+header img {
+  height: 120px;
+}
+
+/* Style for footer part  */
+footer {
+  padding: 20px;
+  text-align: center;
+  background-color: rgb(52, 58, 64);
+  color: #fff;
+}
+
+/* Style for navigation menu part  */
+nav {
+  background-color: rgb(52, 58, 64);
+  text-align: center;
+  padding: 10px;
+
+}
+
+nav a {
+  padding: 10px;
+  text-decoration: none;
+  color: #fff;
+  font-size: 20px;
+  transition: color .3s ease-in-out, box-shadow .9s ease-in-out;
+}
+
+/* Create hover effect for the navigation links */
+nav a:hover {
+  color: #fff;
+  box-shadow: inset 200px 0 0 0 #54b3d6;
+  ;
+}
+
+/* Style the main section with background color and add a border */
+.container {
+  background-color: white;
+  /* Create a border for the form */
+  border: rgb(95, 112, 130);
+  border-width: 10px;
+  border-style: solid;
+
+}
+
+head {
+  font-family: 'Roboto', sans-serif;
+}
+
+body {
+  background-color: rgb(41, 41, 41);
+  font-family: 'Roboto', sans-serif;
+}
+
+h1 {
+  text-align: center;
+  color: white;
+}
+
+/* Change background color of selected row */
+tr.selected {
+  background-color: #c7c4c4;
+}
