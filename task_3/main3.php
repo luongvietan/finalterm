@@ -32,7 +32,6 @@ $result = $conn->query($sql);
 
 if ($result->num_rows > 0) {
     echo "<h2>Danh sách các đơn hàng đã xuất kho</h2>";
-    echo "<form action='update_order_status.php' method='POST'>";
     echo "<table border=1>
             <tr>
                 <th>Order ID</th>
@@ -49,7 +48,7 @@ if ($result->num_rows > 0) {
         echo "<td>" . $row["order_id"] . "</td>";
         echo "<td>" . $row["item_id"] . "</td>";
         echo "<td>" . $row["item_name"] . "</td>";
-        echo "<td>" . $row["item_price"] . "</td>";
+        echo "<td>" . $row["item_price"] . ".000 VND</td>";
         echo "<td>" . $row["payment_method"] . "</td>";
         echo "<td>" . $row["order_status"] . "</td>";
         echo "<td>" . $row["quantity"] . "</td>";
@@ -57,11 +56,19 @@ if ($result->num_rows > 0) {
         echo "</tr>";
     }
     echo "</table>";
+
+    echo "<h2>Xuất file</h2>";
+    echo '<button onclick="expdf()">Phê duyệt Đơn hàng</button>';
 } else {
     echo "No orders found.";
 }
 
 $conn->close();
 ?>
+<script>
+    function expdf() {
+        window.location.href = "expdf.php";
+    }
+</script>
 </body>
 </html>
