@@ -11,118 +11,129 @@ function generateRandomString($length) {
     return $randomString;
 }
 
-if (isset($_POST['QRCode'])) {
-    $totalPrice = isset($_SESSION['totalPrice']) ? $_SESSION['totalPrice'] : 0;
-    $randomString = generateRandomString(6);
+$servername = "localhost";
+$username = "admin";
+$password = "admin";
+$database = "form2";
 
-    $curl = curl_init();
+$conn = new mysqli($servername, $username, $password, $database);
 
-    curl_setopt_array($curl, array(
-        CURLOPT_URL => "https://bio.ziller.vn/api/qr/add",
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_ENCODING => "",
-        CURLOPT_MAXREDIRS => 2,
-        CURLOPT_TIMEOUT => 10,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_CUSTOMREQUEST => "POST",
-        CURLOPT_HTTPHEADER => array(
-            "Authorization: Bearer 3f3c3700b254731a849c8dd020eab3c6",
-            "Content-Type: application/json",
-        ),
-        CURLOPT_POSTFIELDS => json_encode(array(
-            'type' => 'text',
-            'data' => '2|99|0384398634|LUONG VIET AN||0|0|' . $totalPrice . '|' . $randomString . '|transfer_myqr',
-            'background' => 'rgb(255,255,255)',
-            'foreground' => 'rgb(0,0,0)',
-            'logo' => 'https://site.com/logo.png',
-        )),
-    ));
+// Kiểm tra kết nối
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
 
-    $response = curl_exec($curl);
+// Hàm sinh order_id
+function generateOrderID()
+{
+    $randomNumber = mt_rand(100, 999); // Sinh số ngẫu nhiên từ 100 đến 999
+    return "Order" . $randomNumber;
+}
 
-    curl_close($curl);
-    $huy = json_decode($response);
+// Truy vấn dữ liệu từ bảng "cart"
+$sql = "SELECT item_id, item_name, price, quantity, order_id, total FROM cart";
+$result = $conn->query($sql);
 
-    // Kết nối đến cơ sở dữ liệu
-    $conn = mysqli_connect("localhost", "admin", "admin", "form2");
+if ($result->num_rows > 0) {
+    // Mảng để lưu trữ thông tin các hàng
+    $orderItems = array();
 
+    while ($row = $result->fetch_assoc()) {
+        $itemID = $row["item_id"];
+        $itemName = $row["item_name"];
+        $itemPrice = $row["price"];
+        $quantity = $row["quantity"];
+        $orderID = $row["order_id"];
+        $totalPrice += $row["total"]; // Cập nhật tổng giá trị
 
-    // Kiểm tra kết nối
-    if (!$conn) {
-        die("Kết nối đến cơ sở dữ liệu thất bại: " . mysqli_connect_error());
-    }
+        // Kiểm tra xem item_id đã tồn tại trong mảng chưa
+        if (array_key_exists($itemID, $orderItems)) {
+            // Kiểm tra trạng thái của hàng đã tồn tại
+            $existingStatus = $orderItems[$itemID]["order_status"];
 
-
-    // Lấy dữ liệu từ bảng cart
-    $sql = "SELECT order_id, item_id, item_name, price, quantity FROM cart";
-    $result = mysqli_query($conn, $sql);
-
-    if (!$result) {
-        die("Lỗi truy vấn SQL: " . mysqli_error($conn));
-    }
-
-    // Tạo một mảng để lưu trữ dữ liệu gộp lại
-    $mergedData = array();
-
-    // Lặp qua các hàng trong kết quả truy vấn
-    while ($row = mysqli_fetch_assoc($result)) {
-        $order_id = $row['order_id'];
-        $item_id = $row['item_id'];
-        $item_name = $row['item_name'];
-        $item_price = $row['price'];
-        $quantity = $row['quantity'];
-
-        // Kiểm tra xem order_id đã tồn tại trong mảng mergedData chưa
-        if (array_key_exists($order_id, $mergedData)) {
-            // Nếu đã tồn tại, tăng giá trị quantity lên
-            $mergedData[$order_id]['quantity'] += $quantity;
-        } else {
-                        // Nếu chưa tồn tại, thêm mới vào mảng mergedData
-                        $mergedData[$order_id] = array(
-                            'item_id' => $item_id,
-                            'item_name' => $item_name,
-                            'item_price' => $item_price,
-                            'quantity' => $quantity
-                        );
-                    }
-                }
-            
-                // Thêm dữ liệu vào bảng orders
-                foreach ($mergedData as $order_id => $data) {
-                    $item_id = $data['item_id'];
-                    $item_name = $data['item_name'];
-                    $item_des = generateRandomString(3); // Tạo chuỗi ngẫu nhiên gồm 3 ký tự
-                    $item_price = $data['item_price'];
-                    $payment_method = 'momopay';
-                    $order_status = 'pending';
-                    $quantity = $data['quantity'];
-            
-                    $sql = "INSERT INTO orders (order_id, item_id, item_name, item_des, item_price, payment_method, order_status, quantity)
-                            VALUES ('$order_id', '$item_id', '$item_name', '$item_des', '$item_price', '$payment_method', '$order_status', '$quantity')
-                            ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity)";
-            
-                    if (mysqli_query($conn, $sql)) {
-                        echo "<h1>Momo Payment</h1>";
-                    } else {
-                        echo "Lỗi: " . mysqli_error($conn);
-                    }
-                }
-            
-                // Đóng kết nối với cơ sở dữ liệu
-                mysqli_close($conn);
+            // Nếu trạng thái là "pending", cập nhật giá trị quantity
+            if ($existingStatus == "pending") {
+                $orderItems[$itemID]["quantity"] += $quantity;
             }
-            ?>
-            
-            <body>
-              <form action="#" method="post">
-                <input type="submit" name="QRCode" value="Recreate QR Code">
-              </form>
-              <br>
-              <img src="<?= $huy->link; ?>" alt="">
-              <br>
-              <br><a href="orders_pending.php">Xem tình trạng đơn hàng</a>
-              
-            </body>
-            </html>
-            
+        } else {
+            // Nếu item_id chưa tồn tại, thêm mới vào mảng
+            $orderItems[$itemID] = array(
+                "item_name" => $itemName,
+                "item_price" => $itemPrice,
+                "quantity" => $quantity,
+                "order_status" => "pending"
+            );
+        }
+    }
+
+    // Thực hiện các thao tác cập nhật và thêm mới vào bảng "orders" dựa trên mảng
+    foreach ($orderItems as $itemID => $itemData) {
+        $itemName = $itemData["item_name"];
+        $itemPrice = $itemData["item_price"];
+        $quantity = $itemData["quantity"];
+        $orderStatus = $itemData["order_status"];
+
+        if ($orderStatus == "pending") {
+            // Nếu trạng thái là "pending", tạo order_id mới và thêm mới vào bảng "orders"
+            $newOrderID = generateOrderID();
+            $paymentMethod = "momopay";
+            $insertQuery = "INSERT INTO orders (order_id, item_id, item_name, item_price, payment_method, order_status, quantity)
+            VALUES ('$newOrderID', '$itemID', '$itemName', '$itemPrice', '$paymentMethod', '$orderStatus', $quantity)";
+            $conn->query($insertQuery);
+
+            // Đánh dấu rằng dữ liệu đã được thêm vào cơ sở dữ liệu
+            $_SESSION['data_added'] = true;
+
            
+
+            // Gửi yêu cầu tạo QR Code
+            $curl = curl_init();
+            $t = 1000;
+            $randomString = generateRandomString(6);
+
+            curl_setopt_array($curl, array(
+            CURLOPT_URL => "https://bio.ziller.vn/api/qr/add",
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => "",
+            CURLOPT_MAXREDIRS => 2,
+            CURLOPT_TIMEOUT => 10,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_CUSTOMREQUEST => "POST",
+            CURLOPT_HTTPHEADER => array(
+                "Authorization: Bearer 3f3c3700b254731a849c8dd020eab3c6",
+                "Content-Type: application/json",
+            ),
+            CURLOPT_POSTFIELDS => json_encode(array(
+                'type' => 'text',
+                'data' => '2|99|0384398634|LUONG VIET AN||0|0|'.$totalPrice * $t.'|'.$randomString.'|transfer_myqr',
+                'background' => 'rgb(255,255,255)',
+                'foreground' => 'rgb(0,0,0)',
+                'logo' => 'https://site.com/logo.png',
+            )),
+            ));
+
+            $response = curl_exec($curl);
+
+            if ($response === false) {
+                echo "Error 2: " . curl_error($curl);
+            } else {
+                $huy = json_decode($response);
+            }
+            
+            curl_close($curl);
+        }
+        
+    }
+    echo "<h3>Tong Gia Tri Don Hang : ".$totalPrice * $t;
+}
+
+?>
+
+<body>
+<form action="#" method="post">
+    <input type="submit" name="QRCode" value="Recreate QR Code">
+</form>
+<img src="<?= $huy->link; ?>" alt="">
+</body>
+</html>
+
