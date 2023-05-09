@@ -78,7 +78,7 @@ if ($result->num_rows > 0) {
         if ($orderStatus == "pending") {
             // Nếu trạng thái là "pending", tạo order_id mới và thêm mới vào bảng "orders"
             $newOrderID = generateOrderID();
-            $paymentMethod = "cash";
+            $paymentMethod = "transfer";
             $insertQuery = "INSERT INTO orders (order_id, item_id, item_name, item_price, payment_method, order_status, quantity, code)
             VALUES ('$newOrderID', '$itemID', '$itemName', '$itemPrice', '$paymentMethod', '$orderStatus', $quantity, '$randomString')";
             $conn->query($insertQuery);

@@ -23,7 +23,7 @@ session_start();
 $orderID = $_SESSION['order_id'];
 
 // Truy vấn dữ liệu từ bảng "cart"
-$sql = "SELECT item_id, item_name, price, quantity, total, code FROM cart WHERE order_id = '$orderID'";
+$sql = "SELECT item_id, item_name, price, quantity, total FROM cart WHERE order_id = '$orderID'";
 $result = $conn->query($sql);
 
 $totalPrice = 0; // Tổng giá trị phải thanh toán
@@ -36,7 +36,6 @@ if ($result->num_rows > 0) {
                 <th>Item Name</th>
                 <th>Price</th>
                 <th>Quantity</th>
-                <th>PayCode</th>
             </tr>";
     while ($row = $result->fetch_assoc()) {
         echo "<tr>";
@@ -44,7 +43,6 @@ if ($result->num_rows > 0) {
         echo "<td>" . $row["item_name"] . "</td>";
         echo "<td>" . $row["price"] . "</td>";
         echo "<td>" . $row["quantity"] . "</td>";
-        echo "<td>" . $row["code"] . "</td>";
         echo "</tr>";
 
         $totalPrice += $row["total"]; // Cập nhật tổng giá trị
