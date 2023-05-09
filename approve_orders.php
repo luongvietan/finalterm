@@ -2,6 +2,14 @@
 <html>
 <head>
     <title>Approve Orders</title>
+    <script>
+        function selectAll() {
+            var checkboxes = document.getElementsByName('order_ids[]');
+            for (var i = 0; i < checkboxes.length; i++) {
+                checkboxes[i].checked = true;
+            }
+        }
+    </script>
 </head>
 <body>
 <?php
@@ -18,8 +26,8 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// Truy vấn dữ liệu từ bảng "orders"
-$sql = "SELECT * FROM orders";
+// Truy vấn dữ liệu từ bảng "orders" chỉ lấy các hàng có order_status là "pending"
+$sql = "SELECT * FROM orders WHERE order_status = 'pending'";
 $result = $conn->query($sql);
 
 if ($result->num_rows > 0) {
@@ -36,6 +44,9 @@ if ($result->num_rows > 0) {
                 <th>Quantity</th>
                 <th>Approve</th>
             </tr>";
+    echo "<tr>";
+    echo "<td colspan='8'><input type='checkbox' onclick='selectAll()'> Chọn tất cả</td>";
+    echo "</tr>";
     while ($row = $result->fetch_assoc()) {
         echo "<tr>";
         echo "<td>" . $row["order_id"] . "</td>";

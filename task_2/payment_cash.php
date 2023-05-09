@@ -7,47 +7,104 @@ if (!isset($_SESSION['username'])) {
   exit();
 }
 
-// Kiểm tra xem đơn hàng đã được duyệt hay chưa
-$status = isset($_SESSION['order_status']) ? $_SESSION['order_status'] : "pending";
-if ($status === "approved") {
-  header("Location: order_success.php");
-  exit();
+
+function generateRandomString($length) {
+  $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  $randomString = '';
+  for ($i = 0; $i < $length; $i++) {
+      $randomString .= $characters[rand(0, strlen($characters) - 1)];
+  }
+  return $randomString;
 }
 
-// Kết nối đến cơ sở dữ liệu
-$conn = mysqli_connect('localhost', 'admin', 'admin', 'form2');
+$servername = "localhost";
+$username = "admin";
+$password = "admin";
+$database = "form2";
 
-// Lấy thông tin giỏ hàng từ session
-$cart = isset($_SESSION['cart']) ? $_SESSION['cart'] : array();
+$conn = new mysqli($servername, $username, $password, $database);
 
-// Lấy thông tin người dùng từ session
-$email = isset($_SESSION['email']) ? $_SESSION['email'] : '';
-
-// Lưu thông tin giỏ hàng vào bảng orders
-foreach ($cart as $item) {
-  $itemId = $item['id'];
-  $itemName = $item['name'];
-  $itemDes = $item['description'];
-  $itemPrice = $item['price'];
-  $paymentMethod = 'Cash';
-  $orderStatus = 'pending';
-  $quantity = $item['quantity'];
-  
-  // Chuẩn bị truy vấn SQL
-  $query = "INSERT INTO orders (agent_name, item_id, item_name, item_des, item_price, payment_method, order_status, quantity, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-  $stmt = mysqli_prepare($conn, $query);
-  
-  // Gán giá trị vào các tham số trong truy vấn
-  mysqli_stmt_bind_param($stmt, "ssssdssis", $_SESSION['username'], $itemId, $itemName, $itemDes, $itemPrice, $paymentMethod, $orderStatus, $quantity, $email);
-  
-  // Thực thi truy vấn
-  mysqli_stmt_execute($stmt);
+// Kiểm tra kết nối
+if ($conn->connect_error) {
+  die("Connection failed: " . $conn->connect_error);
 }
 
-// Xóa thông tin giỏ hàng
-unset($_SESSION['cart']);
+// Hàm sinh order_id
+function generateOrderID()
+{
+  $randomNumber = mt_rand(100, 999); // Sinh số ngẫu nhiên từ 100 đến 999
+  return "Order" . $randomNumber;
+}
 
-// Chuyển hướng đến trang thông báo đặt hàng thành công
-header("Location: order_success.php");
-exit();
+// Truy vấn dữ liệu từ bảng "cart"
+$sql = "SELECT item_id, item_name, price, quantity, order_id, total FROM cart";
+$result = $conn->query($sql);
+
+if ($result->num_rows > 0) {
+  // Mảng để lưu trữ thông tin các hàng
+  $orderItems = array();
+  // Khởi tạo biến $totalPrice
+  $totalPrice = 0;
+  $t = 1000;
+  while ($row = $result->fetch_assoc()) {
+      $itemID = $row["item_id"];
+      $itemName = $row["item_name"];
+      $itemPrice = $row["price"];
+      $quantity = $row["quantity"];
+      $orderID = $row["order_id"];
+      $totalPrice += $row["total"]; // Cập nhật tổng giá trị
+
+      // Kiểm tra xem item_id đã tồn tại trong mảng chưa
+      if (array_key_exists($itemID, $orderItems)) {
+          // Kiểm tra trạng thái của hàng đã tồn tại
+          $existingStatus = $orderItems[$itemID]["order_status"];
+
+          // Nếu trạng thái là "pending", cập nhật giá trị quantity
+          if ($existingStatus == "pending") {
+              $orderItems[$itemID]["quantity"] += $quantity;
+          }
+      } else {
+          // Nếu item_id chưa tồn tại, thêm mới vào mảng
+          $orderItems[$itemID] = array(
+              "item_name" => $itemName,
+              "item_price" => $itemPrice,
+              "quantity" => $quantity,
+              "order_status" => "pending"
+          );
+      }
+  }
+
+  // Thực hiện các thao tác cập nhật và thêm mới vào bảng "orders" dựa trên mảng
+  foreach ($orderItems as $itemID => $itemData) {
+      $itemName = $itemData["item_name"];
+      $itemPrice = $itemData["item_price"];
+      $quantity = $itemData["quantity"];
+      $orderStatus = $itemData["order_status"];
+
+      if ($orderStatus == "pending") {
+          // Nếu trạng thái là "pending", tạo order_id mới và thêm mới vào bảng "orders"
+          $newOrderID = generateOrderID();
+          $paymentMethod = "cash";
+          $insertQuery = "INSERT INTO orders (order_id, item_id, item_name, item_price, payment_method, order_status, quantity)
+          VALUES ('$newOrderID', '$itemID', '$itemName', '$itemPrice', '$paymentMethod', '$orderStatus', $quantity)";
+          $conn->query($insertQuery);
+
+          // Đánh dấu rằng dữ liệu đã được thêm vào cơ sở dữ liệu
+          $_SESSION['data_added'] = true;
+
+         
+      }
+      
+  }
+  echo "<h3>Tong Gia Tri Don Hang : ".$totalPrice * $t;
+}
 ?>
+<body>
+<br><button onclick="redirectToOrdersPending()">Xem Tình Trạng Đơn Hàng</button>
+
+<script>
+    function redirectToOrdersPending() {
+        window.location.href = "orders_pending.php";
+    }
+</script>
+</body>

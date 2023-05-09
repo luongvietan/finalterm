@@ -37,6 +37,8 @@ $result = $conn->query($sql);
 if ($result->num_rows > 0) {
     // Mảng để lưu trữ thông tin các hàng
     $orderItems = array();
+    // Khởi tạo biến $totalPrice
+    $totalPrice = 0;
 
     while ($row = $result->fetch_assoc()) {
         $itemID = $row["item_id"];
@@ -134,6 +136,14 @@ if ($result->num_rows > 0) {
     <input type="submit" name="QRCode" value="Recreate QR Code">
 </form>
 <img src="<?= $huy->link; ?>" alt="">
+<br>
+<br><button onclick="redirectToOrdersPending()">Xem Tình Trạng Đơn Hàng</button>
+
+<script>
+    function redirectToOrdersPending() {
+        window.location.href = "orders_pending.php";
+    }
+</script>
 </body>
 </html>
 

@@ -20,6 +20,8 @@ if ($conn->connect_error) {
 
 // Xóa dữ liệu trong bảng "cart"
 echo "Đơn Hàng Đã Được Thanh Toán !";
+echo "<br>";
+echo "<a href='list_items.php'><button>Quay về trang chính</button></a>";
 
 // Đóng kết nối tới cơ sở dữ liệu
 $conn->close();

@@ -64,10 +64,17 @@ $conn->close();
 <button onclick="payByCash()">Tiền mặt</button>
 <button onclick="payByBankTransfer()">Chuyển khoản</button>
 <button onclick="payByMomo()">Momo</button>
+<br>
+<br><button onclick="redirectToOrdersPending()">Xem Tình Trạng Đơn Hàng</button>
 
 <script>
-    function payByCash() {
+    function redirectToOrdersPending() {
         window.location.href = "orders_pending.php";
+    }
+</script>
+<script>
+    function payByCash() {
+        window.location.href = "payment_cash.php";
     }
 
     function payByBankTransfer() {
